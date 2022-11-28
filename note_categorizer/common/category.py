@@ -59,6 +59,11 @@ class Category:
             map(lambda serial_data: CategorySchema().load(serial_data), serial_list)
         )
 
+    @classmethod
+    def from_dict(cls, serial_data_dict: dict) -> StaticCategory:
+        """Instantiates a category object from a dictionary representing it"""
+        return CategorySchema().load(serial_data_dict)
+
 
 class CategorySchema(Schema):
     """Schema representing a single category. Useful for deserializing data."""

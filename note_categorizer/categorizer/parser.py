@@ -3,6 +3,7 @@ it. """
 
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import NamedTuple
 from typing import Type, TypeVar
 from dataclasses import dataclass
@@ -41,11 +42,23 @@ class Parser:
         """Adds a category to the list"""
         self.valid_categories.append(new_category)
 
+    def get_category_by_name(self, name: str) -> Optional[Category]:
+        """Returns a category (if it exists) based on its name"""
+        for category in self.valid_categories:
+            if category.name == name:
+                return category
+        return None
+
     @classmethod
-    def from_json(cls: Type[ParserStatic], serial_list: List[dict]) -> ParserStatic:
-        """Instantiates object of class when the input data is a dictionary.
-        # Precondition
-        The dictionary matches the schema presented by the category class"""
+    def from_json_notation(
+        cls: Type[ParserStatic], serial_list: List[dict]
+    ) -> ParserStatic:
+        """Instantiates object of class when the input data is a list rendered
+        from a json file (i.e. after load).
+        """
         category_list: List[Category] = Category.from_serial_list(serial_list)
 
         return cls(category_list)
+
+    # pylint: disable=fixme
+    # TODO: the parsing algorithm
