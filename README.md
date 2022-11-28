@@ -7,8 +7,8 @@ lawyers when making timesheets).
 ## Developing the Project
 
 This project maintains a strict typing and linting checker. To get up to
-standard, please run `poetry install` within the top level directory of the
-project. This will handle any setup and installation required.
+standard, please run `poetry install --with dev` within the top level directory
+of the project. This will handle any setup and installation required.
 
 Next, please run
 `poetry run pre-commit install --hook-type pre-commit --hook-type pre-push`.
@@ -20,6 +20,12 @@ pushed to remote.
 once they are installed.
 
 For more context, please see [mattrizzo_devops](https://github.com/MatthewRizzo/mattrizzo_devops).
+
+### Testing
+
+Though no formal CI is currently setup within GitHub, please do not push code
+that fails the pytest configuration as defined by
+[`pyproject.toml`](pyproject.toml).
 
 ## Todo
 
