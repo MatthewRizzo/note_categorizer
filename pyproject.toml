@@ -12,6 +12,7 @@ packages = [{include = "note_categorizer"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 mattrizzo-devops = {git = "https://github.com/MatthewRizzo/mattrizzo_devops"}
+marshmallow = "^3.19.0"
 
 [build-system]
 requires = ["poetry-core"]
