@@ -20,3 +20,9 @@ pushed to remote.
 once they are installed.
 
 For more context, please see [mattrizzo_devops](https://github.com/MatthewRizzo/mattrizzo_devops).
+
+## Todo
+
+* Initialize Web App Front end
+* Add front end ability to define categories (name + keywords) in a nice way
+* Add front end ability to past a list of notes -> sent to parser
