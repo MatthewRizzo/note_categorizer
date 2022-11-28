@@ -1,0 +1,18 @@
+
+
+[tool.poetry]
+name = "Note Categorizer"
+version = "0.1.0"
+description = "Note categorizer Web-App Project"
+authors = ["Matthew Rizzo <mattrizzo21@gmail.com>"]
+license = "GNU GPLv3"
+
+packages = [{include = "note_categorizer"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+mattrizzo-devops = {git = "https://github.com/MatthewRizzo/mattrizzo_devops"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
