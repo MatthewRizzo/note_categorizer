@@ -21,11 +21,25 @@ once they are installed.
 
 For more context, please see [mattrizzo_devops](https://github.com/MatthewRizzo/mattrizzo_devops).
 
+### Install
+
+Install is made super easy using poetry and the [Makefile](./Makefile).
+Simply run
+
+```bash
+make dev-install
+```
+
+and the entire project will be setup for you to both run and develop!
+
 ### Testing
 
 Though no formal CI is currently setup within GitHub, please do not push code
 that fails the pytest configuration as defined by
 [`pyproject.toml`](pyproject.toml).
+
+Additionally, the command `make all_test` using the [Makefile](./Makefile) will
+run through all tests (static and unit testing) for you!
 
 ## Todo
 

@@ -4,7 +4,4 @@ from note_categorizer.categorizer import parser
 from note_categorizer.web_app import server
 
 # pylint: disable=redefined-builtin
-all = [
-    "parser",
-    "server"
-]
+all = ["parser", "server"]

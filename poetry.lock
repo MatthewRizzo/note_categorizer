@@ -198,7 +198,7 @@ pylint = "^2.15.4"
 type = "git"
 url = "https://github.com/MatthewRizzo/mattrizzo_devops"
 reference = "HEAD"
-resolved_reference = "fca6dadf3abeb78d54c0f15673ac5a5e2355ef6f"
+resolved_reference = "0c58f183fca30d25a07e8568635e1a292cb0ad6f"
 
 [[package]]
 name = "mccabe"
