@@ -4,8 +4,10 @@ be grouped together. Maps a category name to its description"""
 from typing import List
 from typing import TypeVar
 from typing import Type
+from typing import Optional
 from marshmallow import Schema, fields
 from marshmallow.decorators import post_load
+from marshmallow import ValidationError
 
 # Added for static type checking on constructor functions
 StaticCategory = TypeVar("StaticCategory", bound="Category")
@@ -53,17 +55,32 @@ class Category:
         return False
 
     @classmethod
-    def from_serial_list(cls, serial_list: List[dict]) -> List[StaticCategory]:
+    def from_serial_list(
+        cls, serial_list: List[dict]
+    ) -> Optional[List[StaticCategory]]:
         """Generates a list of instantiated members of the class from a list of
-        serial data representing the class."""
-        return list(
-            map(lambda serial_data: CategorySchema().load(serial_data), serial_list)
-        )
+        serial data representing the class.
+        # Return
+        * None if there was an error deserializing the data to the right schema
+        * The list of categories"""
+        try:
+            return list(
+                map(lambda serial_data: CategorySchema().load(serial_data), serial_list)
+            )
+        except ValidationError:
+            print("Your input is of the wrong form. Please check the schema")
+            return None
 
     @classmethod
-    def from_dict(cls: Type[StaticCategory], serial_data_dict: dict) -> StaticCategory:
+    def from_dict(
+        cls: Type[StaticCategory], serial_data_dict: dict
+    ) -> Optional[StaticCategory]:
         """Instantiates a category object from a dictionary representing it"""
-        return CategorySchema().load(serial_data_dict)
+        try:
+            return CategorySchema().load(serial_data_dict)
+        except ValidationError:
+            print("Your input is of the wrong form. Please check the schema")
+            return None
 
 
 class CategorySchema(Schema):

@@ -52,13 +52,17 @@ class Parser:
     @classmethod
     def from_json_notation(
         cls: Type[ParserStatic], serial_list: List[dict]
-    ) -> ParserStatic:
+    ) -> Optional[ParserStatic]:
         """Instantiates object of class when the input data is a list rendered
         from a json file (i.e. after load).
+        # Return
+        * None When deserializing the data failed.
+        * A parser object otherwise.
         """
-        category_list: List[Category] = Category.from_serial_list(serial_list)
-
-        return cls(category_list)
+        category_list: Optional[List[Category]] = Category.from_serial_list(serial_list)
+        if category_list is not None:
+            return cls(category_list)
+        return None
 
     # pylint: disable=fixme
     # TODO: the parsing algorithm

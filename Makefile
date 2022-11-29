@@ -18,4 +18,4 @@ linter:
 format:
 	poetry run black ${package}
 
-all_test: test type_checker linter
+all_test: test type linter

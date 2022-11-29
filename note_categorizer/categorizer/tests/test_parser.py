@@ -1,4 +1,6 @@
 """Tests the parser module / related classes"""
+from typing import Optional
+
 from note_categorizer.categorizer.parser import Parser
 from note_categorizer.common.category import Category
 
@@ -10,7 +12,10 @@ data_list = [
 
 def test_parser() -> None:
     """Test the parser"""
-    parser: Parser = Parser.from_json_notation(data_list)
+    parser: Optional[Parser] = Parser.from_json_notation(data_list)
+    assert (
+        parser is not None
+    ), "Creating parser from json failed due to validation. This shouldn't happen."
     assert parser.get_category_by_name("test") is None
 
     parser.add_category(Category("test", ["foo_keyword"]))
