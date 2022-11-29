@@ -3,6 +3,7 @@ be grouped together. Maps a category name to its description"""
 
 from typing import List
 from typing import TypeVar
+from typing import Type
 from marshmallow import Schema, fields
 from marshmallow.decorators import post_load
 
@@ -60,7 +61,7 @@ class Category:
         )
 
     @classmethod
-    def from_dict(cls, serial_data_dict: dict) -> StaticCategory:
+    def from_dict(cls: Type[StaticCategory], serial_data_dict: dict) -> StaticCategory:
         """Instantiates a category object from a dictionary representing it"""
         return CategorySchema().load(serial_data_dict)
 
