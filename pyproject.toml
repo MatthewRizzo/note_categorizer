@@ -9,6 +9,9 @@ license = "GNU GPLv3"
 
 packages = [{include = "note_categorizer"}]
 
+[tool.poetry.scripts]
+categorizer_cli = "note_categorizer.categorizer.main:main"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 mattrizzo-devops = {git = "https://github.com/MatthewRizzo/mattrizzo_devops"}

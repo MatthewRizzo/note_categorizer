@@ -82,6 +82,30 @@ class Category:
             print("Your input is of the wrong form. Please check the schema")
             return None
 
+    @classmethod
+    def from_str(
+        cls: Type[StaticCategory], serial_data: str
+    ) -> Optional[StaticCategory]:
+        """Instantiates a category object from a string representing it.
+        Note: there MUST be a ': ' seperating name from keywords.
+        Even if there aren't any."""
+        serial_data = serial_data.strip()
+
+        if ":" not in serial_data:
+            return None
+
+        name_keyword_pair: List[str] = serial_data.split(":", maxsplit=1)
+        keywords_str: str = name_keyword_pair[1]
+        if keywords_str.count(" ") > 0:
+            raw_keywords: List[str] = keywords_str.split(" ")
+            keywords = list(map(lambda keyword: keyword.strip(), raw_keywords))
+            keywords = list(filter(lambda keyword: keyword != "", keywords))
+        elif len(keywords_str) > 0:
+            keywords = [keywords_str.strip()]
+        else:
+            keywords = []
+        return Category(name_keyword_pair[0], keywords)  # type: ignore
+
 
 class CategorySchema(Schema):
     """Schema representing a single category. Useful for deserializing data."""

@@ -19,3 +19,6 @@ format:
 	poetry run black ${package}
 
 all_test: test type linter
+
+build:
+	poetry build

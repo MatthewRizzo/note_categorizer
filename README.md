@@ -4,6 +4,26 @@ A python-based Web App to group notes together based on expressions and or
 categories. Useful for grouping livesteam notes into categories (i.e. for
 lawyers when making timesheets).
 
+## Running the Program
+
+### Running Via Command Line
+
+This program is easy to run via command line using poetry! Just run
+
+```bash
+categorizer_cli <your flags>
+```
+
+The most important flags to use are `--category_path` and `--notes_path` to
+provide the program the location of your files. Otherwise, the program
+defaults to looking for files at the top directory of the project.
+
+#### Example Input Files
+
+Please see [example_category_file.txt](example_category_file.txt) and
+[example_notes.txt](example_notes.txt) for examples of creating input files
+to program. Note this does NOT apply when using the program via Web App
+
 ## Developing the Project
 
 This project maintains a strict typing and linting checker. To get up to
