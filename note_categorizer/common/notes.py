@@ -5,6 +5,8 @@ from typing import Type
 from typing import List
 from typing import Optional
 from typing import NamedTuple
+import sys
+
 from dataclasses import dataclass
 from datetime import datetime
 from marshmallow import ValidationError
@@ -64,23 +66,26 @@ class Note:
 
         # pylint: disable=unnecessary-lambda-assignment
         err_msg_func = (
-            lambda time_type, time_str: f"The {time_type} time {time_str} is \
-                not a properly formatted time. It should be HH:MM for a 24 hour\
-                clock"
+            lambda time_type, time_str: f"The {time_type} time '{time_str}' is "
+        )
+        err_msg = (
+            "not part of a properly formatted note. It should be HH:MM: <notes here>"
         )
         try:
             time.start_time = datetime.strptime(start_time_str, time_format_str)
         except ValueError as err:
-            print(err_msg_func("start", start_time_str))
             print(err)
+            print(err_msg_func("start", start_time_str) + err_msg)
             time.start_time = None
+            sys.exit(1)
 
         try:
             time.end_time = datetime.strptime(end_time_str, time_format_str)
         except ValueError as err:
-            print(err_msg_func("end", end_time_str))
             print(err)
+            print(err_msg_func("end", end_time_str) + err_msg)
             time.end_time = None
+            sys.exit(1)
 
         return TimeInfo(time, time_info_pair[1])
 
