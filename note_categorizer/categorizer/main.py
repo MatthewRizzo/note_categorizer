@@ -11,7 +11,7 @@ from git import Repo
 
 from note_categorizer.categorizer.text_file_reader import CategoryReader
 from note_categorizer.categorizer.text_file_reader import NoteReader
-from note_categorizer.categorizer.parser import ParsedData, Parser
+from note_categorizer.categorizer.parser import ParsedData, TerminalParser
 from note_categorizer.common.category import Category
 from note_categorizer.common.notes import Note
 
@@ -79,11 +79,15 @@ def main():
     note_reader = NoteReader(args["notes_path"])
     note_list: List[Note] = note_reader.generate_list()
 
-    note_parser = Parser(category_list)
-    parsed_notes: ParsedData = note_parser.parse_notes(note_list)
+    terminal_note_parser = TerminalParser(category_list)
+    parsed_notes: ParsedData = terminal_note_parser.parse_notes(note_list)
+
+    completed_parsing: ParsedData = terminal_note_parser.resolve_unknowns(parsed_notes)
 
     for category in category_list:
-        category_notes: Optional[List[Note]] = parsed_notes.get_category_notes(category)
+        category_notes: Optional[List[Note]] = completed_parsing.get_category_notes(
+            category
+        )
         print(f"Category {category.name} notes:\n")
         if category_notes is not None:
             print("\n".join(Note.notes_list_to_str_list(category_notes)))
@@ -91,13 +95,10 @@ def main():
             print("No notes for this category")
         print("---------------------------------------------------------\n\n")
 
-    if not parsed_notes.is_fully_parsed():
+    if not completed_parsing.is_fully_parsed():
         print("Unknown category notes: ")
-        for note in parsed_notes.get_unknown_notes():
+        for note in completed_parsing.get_unknown_notes():
             print(note)
-
-    # pylint: disable=fixme
-    # TODO: Ask user to resolve unknowns manually
 
     # pylint: disable=fixme
     # TODO: calculate the time for notes in a group

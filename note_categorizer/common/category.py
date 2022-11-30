@@ -54,6 +54,10 @@ class Category:
                 return True
         return False
 
+    def __str__(self) -> str:
+        """Define a str representation of Category"""
+        return self.name
+
     @classmethod
     def from_serial_list(
         cls, serial_list: List[dict]

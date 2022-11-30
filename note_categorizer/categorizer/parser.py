@@ -7,6 +7,7 @@ from typing import Optional
 from typing import NamedTuple
 from typing import Type, TypeVar
 from dataclasses import dataclass
+import abc
 
 from note_categorizer.common.category import Category
 from note_categorizer.common.notes import Note
@@ -49,13 +50,22 @@ class ParsedData(NamedTuple):
         """Adds a note to the list of ungrouped notes"""
         self.unknown_assignments.append(note)
 
+    def move_unknown_to_known(
+        self, unknown_note_index: int, new_category: Category
+    ) -> None:
+        """Moves a note from the unknowns to a category within the "known"""
+        note_to_move: Note = self.unknown_assignments.pop(unknown_note_index)
+        self.add_to_known_assignments(note_to_move, new_category)
+
 
 # Added for static type checking on constructor functions
 ParserStatic = TypeVar("ParserStatic", bound="Parser")
+TerminalParserStatic = TypeVar("TerminalParserStatic", bound="TerminalParser")
+WebParserStatic = TypeVar("WebParserStatic", bound="WebParser")
 
 
 @dataclass
-class Parser:
+class Parser(abc.ABC):
     """Overall parser. Intended to be used as a library for other modules and
     projects."""
 
@@ -74,7 +84,8 @@ class Parser:
 
     @classmethod
     def from_json_notation(
-        cls: Type[ParserStatic], serial_list: List[dict]
+        cls: Type[ParserStatic],
+        serial_list: List[dict],
     ) -> Optional[ParserStatic]:
         """Instantiates object of class when the input data is a list rendered
         from a json file (i.e. after load).
@@ -83,9 +94,10 @@ class Parser:
         * A parser object otherwise.
         """
         category_list: Optional[List[Category]] = Category.from_serial_list(serial_list)
+        res: Optional[ParserStatic] = None
         if category_list is not None:
-            return cls(category_list)
-        return None
+            res = cls(category_list)
+        return res
 
     def parse_notes(self, notes: List[Note]) -> ParsedData:
         """Parses the notes and splits them up by category as much as possible.
@@ -100,6 +112,10 @@ class Parser:
 
         return parsed_data
 
+    @abc.abstractmethod
+    def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
+        """Further parses the data by resolving unknown categorizations"""
+
     def _add_note_to_category(self, note: Note, parsed_data: ParsedData) -> bool:
         """# Return
         True if a category was found for the note.
@@ -110,3 +126,70 @@ class Parser:
                 parsed_data.add_to_known_assignments(note, category)
                 return True
         return False
+
+
+@dataclass
+class TerminalParser(Parser):
+    """Class representing how to parse data when working through terminal"""
+
+    valid_categories: List[Category]
+
+    def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
+        """Further parses the data by resolving unknown categorizations
+        by prompting the user."""
+        while not parsed_data.is_fully_parsed():
+            selected_category: Category = self._prompt_user(
+                parsed_data.get_unknown_notes()[0]
+            )
+            parsed_data.move_unknown_to_known(0, selected_category)
+        print("Done Resolving unknown notes!\n----------------------------\n\n")
+        return parsed_data
+
+    def _prompt_user(self, note: Note) -> Category:
+        """Prompts the user to get the correct category for the note.
+        # Post Condition
+        The category returned MUST be a valid category.
+        """
+        selected_category: Optional[Category] = None
+        while selected_category is None:
+
+            print("Valid category options: ")
+            for idx, category in enumerate(self.valid_categories, start=0):
+                print(f"{idx}) {category}")
+
+            input_msg = f"Please select the category for this note: {note}"
+            input_msg += "\nResponse) "
+            selected_category_idx_str = input(input_msg)
+
+            invalid_selection_msg = "That option is not valid. "
+            invalid_selection_msg_suffix = " Please try again.\n\n"
+
+            try:
+                selected_category_idx = int(selected_category_idx_str)
+            except ValueError as err:
+                reason = "A non-integer was entered."
+                print(invalid_selection_msg + reason + invalid_selection_msg_suffix)
+                print(err)
+                continue
+            if (
+                selected_category_idx < 0
+                or selected_category_idx > len(self.valid_categories) - 1
+            ):
+                reason = f"Selection {selected_category_idx} is outside allowed range."
+                print(invalid_selection_msg + reason + invalid_selection_msg_suffix)
+                continue
+
+            selected_category = self.valid_categories[selected_category_idx]
+            print("\n")
+        return selected_category
+
+
+@dataclass
+class WebParser(Parser):
+    """Class representing how to parse data when working through Web App"""
+
+    valid_categories: List[Category]
+
+    def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
+        """Further parses the data by resolving unknown categorizations
+        by prompting the user."""

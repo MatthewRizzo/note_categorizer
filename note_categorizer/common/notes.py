@@ -90,7 +90,7 @@ class Note:
         return TimeInfo(time, time_info_pair[1])
 
     def __str__(self) -> str:
-        res_str = "* "
+        res_str = ""
         if self.time.start_time is None:
             res_str += "HH:MM"
         else:
@@ -110,4 +110,4 @@ class Note:
     def notes_list_to_str_list(cls, note_list: List[NoteStatic]) -> List[str]:
         """Converts a list of notes to a list of strings representing them"""
         # pylint: disable=unnecessary-lambda
-        return list(map(lambda note: str(note), note_list))
+        return list(map(lambda note: "* " + str(note), note_list))
