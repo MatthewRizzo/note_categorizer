@@ -107,21 +107,28 @@ class Parser(abc.ABC):
     ) -> None:
         """Computes the total time for the given category and saves it."""
         total_time_min = 0
-        for note in fully_parsed_data.get_category_notes(category):
-            if note is None:
-                break
+        category_notes_list = fully_parsed_data.get_category_notes(category)
+        if category_notes_list is None:
+            return
+
+        for note in category_notes_list:
 
             total_time_min = note.time.compute_time_difference()
             if self.category_total_time is None:
                 self.category_total_time = {}
 
-            category_total_time = self.category_total_time.get(category, 0)
+            category_total_time = int(self.category_total_time.get(category, 0))
+            print(
+                f"category_total_time = {category_total_time}. self.category_total_time[category] "
+            )
             category_total_time += total_time_min
             self.category_total_time[category] = category_total_time
 
     def get_category_time(self, category: Category) -> int:
         """Returns the overall time difference in MINUTES for notes in the category"""
-        return self.category_total_time[category]
+        if self.category_total_time is not None:
+            return self.category_total_time[category]
+        return 0
 
     def parse_notes(self, notes: List[Note]) -> ParsedData:
         """Parses the notes and splits them up by category as much as possible.
