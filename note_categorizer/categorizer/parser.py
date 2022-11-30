@@ -118,9 +118,6 @@ class Parser(abc.ABC):
                 self.category_total_time = {}
 
             category_total_time = int(self.category_total_time.get(category, 0))
-            print(
-                f"category_total_time = {category_total_time}. self.category_total_time[category] "
-            )
             category_total_time += total_time_min
             self.category_total_time[category] = category_total_time
 

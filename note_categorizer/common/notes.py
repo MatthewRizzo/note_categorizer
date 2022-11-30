@@ -5,7 +5,6 @@ from typing import Type
 from typing import List
 from typing import Optional
 from typing import NamedTuple
-import sys
 from math import ceil
 
 from dataclasses import dataclass
@@ -76,6 +75,7 @@ class Note:
         """Check's to see if the start and end time is listed or not.
         If it is, returns a tuple representing them.
         \nNOTE: The expected line format is '10:25-10:45: or '+<minx>:'"""
+        time_info = None
         if "-" not in data and ":" in data and "+" in data.split(":")[0]:
             time_info = cls._handle_time_difference_in_note(data)
 
@@ -84,13 +84,11 @@ class Note:
             time_info = cls._handle_time_range(data)
         elif ("-" in data or "+" in data) and " " in data:
             time_info = cls._handle_improper_colon_format(data)
-        else:
-            # can assume it is all just info and no time
-            note_time = NoteTime(None, None, None, True)
-            time_info = TimeInfo(note_time, data)
 
         if time_info is None:
-            sys.exit(1)
+            # can assume it is all just info and no time
+            time = NoteTime(None, None, None, True)
+            time_info = TimeInfo(time, data)
 
         return time_info
 
@@ -104,7 +102,12 @@ class Note:
         time = NoteTime(None, None, None, True)
         time_format_str = "%H:%M"
         time_info_pair = data.split(": ", maxsplit=1)
-        start_time_str, end_time_str = time_info_pair[0].split("-")
+        try:
+            start_time_str, end_time_str = time_info_pair[0].split("-")
+        except ValueError as err:
+            if verbose:
+                print(err)
+            return None
 
         # pylint: disable=unnecessary-lambda-assignment
         err_msg_func = (
@@ -142,11 +145,15 @@ class Note:
         * `None` - When the data is determined to NOT be using time differences.
         * `TimeInfo` - When the data has time differences and they are determined
         """
-        time = NoteTime(None, None, None, True)
         # When user just adds time difference
-        time.has_time_range = False
+        time = NoteTime(None, None, None, False)
         # get min from '+<min>:'
-        str_time_diff = data.split(":")[0].split("+", maxsplit=1)[1]
+        str_time_diff = (
+            data.split("+", maxsplit=1)[1]
+            .split(" ", maxsplit=1)[0]
+            .split(":", maxsplit=1)[0]
+            .strip()
+        )
         try:
             time_diff = int(str_time_diff)
         except TypeError as err:
@@ -158,7 +165,14 @@ class Note:
             return None
 
         time.time_difference_min = time_diff
-        info: str = data.split(": ", maxsplit=1)[1]
+        info_without_colon = data.split(str(str_time_diff), maxsplit=1)[1]
+        if ":" in data:
+            info: str = data.split(": ", maxsplit=1)[1]
+        elif len(info_without_colon) > 0:
+            info = info_without_colon.strip()
+        else:
+            return None
+
         return TimeInfo(time, info)
 
     @classmethod
@@ -170,7 +184,7 @@ class Note:
         * `None` - When the data is determined to NOT be using time differences or ranges.
         * `TimeInfo` - When the data has time info and it can be determined.
         """
-        time_difference_res = cls._handle_time_difference_in_note(data, False)
+        time_difference_res = cls._handle_time_difference_in_note(data, True)
         if time_difference_res is not None:
             return time_difference_res
 
