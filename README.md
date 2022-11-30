@@ -11,7 +11,7 @@ lawyers when making timesheets).
 This program is easy to run via command line using poetry! Just run
 
 ```bash
-categorizer_cli <your flags>
+poetry run categorizer_cli <your flags>
 ```
 
 The most important flags to use are `--category_path` and `--notes_path` to
