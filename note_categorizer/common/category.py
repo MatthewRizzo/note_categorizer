@@ -95,8 +95,9 @@ class Category:
         Even if there aren't any."""
         serial_data = serial_data.strip()
 
+        # User forgot to put :
         if ":" not in serial_data:
-            return None
+            return Category(serial_data, [])  # type: ignore
 
         name_keyword_pair: List[str] = serial_data.split(":", maxsplit=1)
         keywords_str: str = name_keyword_pair[1]
