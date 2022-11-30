@@ -77,19 +77,30 @@ class Note:
         If it is, returns a tuple representing them.
         \nNOTE: The expected line format is '10:25-10:45: or '+<minx>:'"""
         if "-" not in data and ":" in data and "+" in data.split(":")[0]:
-            return cls._handle_time_difference_in_note(data)
+            time_info = cls._handle_time_difference_in_note(data)
 
-        if "-" in data and ":" in data:
+        elif "-" in data and ":" in data:
             # default case of there being a time range
-            return cls._handle_time_range(data)
+            time_info = cls._handle_time_range(data)
+        elif ("-" in data or "+" in data) and " " in data:
+            time_info = cls._handle_improper_colon_format(data)
+        else:
+            # can assume it is all just info and no time
+            note_time = NoteTime(None, None, None, True)
+            time_info = TimeInfo(note_time, data)
 
-        # can assume it is all just info and no time
-        time = NoteTime(None, None, None, True)
-        return TimeInfo(time, data)
+        if time_info is None:
+            sys.exit(1)
+
+        return time_info
 
     @classmethod
-    def _handle_time_range(cls, data: str) -> TimeInfo:
-        """Handles when a note has a time range."""
+    def _handle_time_range(cls, data: str, verbose: bool = True) -> Optional[TimeInfo]:
+        """Handles when a note has a time range.
+        # Return
+        * `None` - When the data is determined to NOT be using time ranges.
+        * `TimeInfo` - When the data has time ranges and they are determined
+        """
         time = NoteTime(None, None, None, True)
         time_format_str = "%H:%M"
         time_info_pair = data.split(": ", maxsplit=1)
@@ -105,24 +116,32 @@ class Note:
         try:
             time.start_time = datetime.strptime(start_time_str, time_format_str)
         except ValueError as err:
-            print(err)
-            print(err_msg_func("start", start_time_str) + err_msg)
+            if verbose:
+                print(err)
+                print(err_msg_func("start", start_time_str) + err_msg)
             time.start_time = None
-            sys.exit(1)
+            return None
 
         try:
             time.end_time = datetime.strptime(end_time_str, time_format_str)
         except ValueError as err:
-            print(err)
-            print(err_msg_func("end", end_time_str) + err_msg)
+            if verbose:
+                print(err)
+                print(err_msg_func("end", end_time_str) + err_msg)
             time.end_time = None
-            sys.exit(1)
+            return None
         return TimeInfo(time, time_info_pair[1])
 
     @classmethod
-    def _handle_time_difference_in_note(cls, data: str) -> TimeInfo:
+    def _handle_time_difference_in_note(
+        cls, data: str, verbose: bool = True
+    ) -> Optional[TimeInfo]:
         """Generates TimeInfo when the user has a note with time difference
-        rather than a time range."""
+        rather than a time range.
+        # Return
+        * `None` - When the data is determined to NOT be using time differences.
+        * `TimeInfo` - When the data has time differences and they are determined
+        """
         time = NoteTime(None, None, None, True)
         # When user just adds time difference
         time.has_time_range = False
@@ -131,13 +150,36 @@ class Note:
         try:
             time_diff = int(str_time_diff)
         except TypeError as err:
-            print(err)
-            print("The +<min>: section of a note did not have a valid number for <min>")
-            sys.exit(1)
+            if verbose:
+                print(err)
+                print(
+                    "The +<min>: section of a note did not have a valid number for <min>"
+                )
+            return None
 
         time.time_difference_min = time_diff
         info: str = data.split(": ", maxsplit=1)[1]
         return TimeInfo(time, info)
+
+    @classmethod
+    def _handle_improper_colon_format(cls, data: str) -> Optional[TimeInfo]:
+        """Based on testing, some users forget to add the ':' but are otherwise
+        correct. This function handles that case by ignoring the missing colon\
+        and routing to the correct handler.
+        # Return
+        * `None` - When the data is determined to NOT be using time differences or ranges.
+        * `TimeInfo` - When the data has time info and it can be determined.
+        """
+        time_difference_res = cls._handle_time_difference_in_note(data, False)
+        if time_difference_res is not None:
+            return time_difference_res
+
+        time_range_res = cls._handle_time_range(data, False)
+        if time_range_res is not None:
+            return time_range_res
+
+        # Means there is DEFINETLY no time info
+        return None
 
     def __str__(self) -> str:
         res_str = ""
