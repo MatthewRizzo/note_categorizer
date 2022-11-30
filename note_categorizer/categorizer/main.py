@@ -6,27 +6,19 @@ from typing import Any
 from typing import Optional
 from typing import List
 from pathlib import Path
-import os
-from git import Repo
 
 from note_categorizer.categorizer.text_file_reader import CategoryReader
 from note_categorizer.categorizer.text_file_reader import NoteReader
 from note_categorizer.categorizer.parser import ParsedData, TerminalParser
 from note_categorizer.common.category import Category
 from note_categorizer.common.notes import Note
-
-
-def _get_repo_top_dir() -> Path:
-    """Retrieves the path to the top-level directory of the repository"""
-    git_repo = Repo(os.getcwd(), search_parent_directories=True)
-    git_root = git_repo.git.rev_parse("--show-toplevel")
-    return Path(git_root)
+from note_categorizer.common.common_utils import CommonUtils
 
 
 def _read_args() -> Dict[str, Any]:
     """Parses cli args and returns them."""
     parser = argparse.ArgumentParser()
-    abs_repo_top_dir: Path = _get_repo_top_dir()
+    abs_repo_top_dir: Path = CommonUtils.get_repo_top_dir()
     default_category_filename = "category_file.txt"
     default_category_path = abs_repo_top_dir / default_category_filename
     default_note_filename = "note_file.txt"
