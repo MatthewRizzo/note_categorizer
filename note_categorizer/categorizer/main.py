@@ -79,10 +79,11 @@ def main():
     note_reader = NoteReader(args["notes_path"])
     note_list: List[Note] = note_reader.generate_list()
 
-    terminal_note_parser = TerminalParser(category_list)
+    terminal_note_parser = TerminalParser(category_list, {})
     parsed_notes: ParsedData = terminal_note_parser.parse_notes(note_list)
 
     completed_parsing: ParsedData = terminal_note_parser.resolve_unknowns(parsed_notes)
+    terminal_note_parser.calculate_category_time(completed_parsing)
 
     for category in category_list:
         category_notes: Optional[List[Note]] = completed_parsing.get_category_notes(
@@ -91,6 +92,8 @@ def main():
         print(f"Category {category.name} notes:\n")
         if category_notes is not None:
             print("\n".join(Note.notes_list_to_str_list(category_notes)))
+            start_msg = "Total Time Difference (minutes):"
+            print(f"{start_msg} {terminal_note_parser.get_category_time(category)}")
         else:
             print("No notes for this category")
         print("---------------------------------------------------------\n\n")

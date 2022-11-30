@@ -6,9 +6,10 @@ from typing import List
 from typing import Optional
 from typing import NamedTuple
 import sys
+from math import ceil
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from marshmallow import ValidationError
 
 
@@ -18,6 +19,13 @@ class NoteTime:
 
     start_time: Optional[datetime]
     end_time: Optional[datetime]
+
+    def compute_time_difference(self) -> int:
+        """Calculates the time difference between the times in minutes"""
+        diff_seconds: timedelta = self.end_time - self.start_time
+        seconds_diff = diff_seconds.total_seconds()
+        minutes_diff: int = ceil(seconds_diff // 60)
+        return minutes_diff
 
 
 class TimeInfo(NamedTuple):

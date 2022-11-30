@@ -71,6 +71,9 @@ class Parser(abc.ABC):
 
     valid_categories: List[Category]
 
+    # Maps category to time in minutes. Only computed once fully parsed.
+    category_total_time: Optional[Dict[Category, int]]
+
     def add_category(self, new_category: Category) -> None:
         """Adds a category to the list"""
         self.valid_categories.append(new_category)
@@ -96,8 +99,29 @@ class Parser(abc.ABC):
         category_list: Optional[List[Category]] = Category.from_serial_list(serial_list)
         res: Optional[ParserStatic] = None
         if category_list is not None:
-            res = cls(category_list)
+            res = cls(category_list, None)
         return res
+
+    def compute_category_time(
+        self, category: Category, fully_parsed_data: ParsedData
+    ) -> None:
+        """Computes the total time for the given category and saves it."""
+        total_time_min = 0
+        for note in fully_parsed_data.get_category_notes(category):
+            if note is None:
+                break
+
+            total_time_min = note.time.compute_time_difference()
+            if self.category_total_time is None:
+                self.category_total_time = {}
+
+            category_total_time = self.category_total_time.get(category, 0)
+            category_total_time += total_time_min
+            self.category_total_time[category] = category_total_time
+
+    def get_category_time(self, category: Category) -> int:
+        """Returns the overall time difference in MINUTES for notes in the category"""
+        return self.category_total_time[category]
 
     def parse_notes(self, notes: List[Note]) -> ParsedData:
         """Parses the notes and splits them up by category as much as possible.
@@ -115,6 +139,17 @@ class Parser(abc.ABC):
     @abc.abstractmethod
     def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
         """Further parses the data by resolving unknown categorizations"""
+
+    def calculate_category_time(self, parsed_data: ParsedData) -> None:
+        """Computers the total time spent (in minutes) on each category.
+        # Precondition
+        parsed_data.is_fully_parsed is True"""
+        if parsed_data.is_fully_parsed() is False:
+            print("Cannot compute total times until data is fully parsed")
+            return
+
+        for category in self.valid_categories:
+            self.compute_category_time(category, parsed_data)
 
     def _add_note_to_category(self, note: Note, parsed_data: ParsedData) -> bool:
         """# Return
