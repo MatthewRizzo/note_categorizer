@@ -115,9 +115,6 @@ def main():
         for note in completed_parsing.get_unknown_notes():
             print(note)
 
-    # pylint: disable=fixme
-    # TODO: calculate the time for notes in a group
-
 
 if __name__ == "__main__":
     main()

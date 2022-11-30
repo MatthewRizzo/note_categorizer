@@ -54,6 +54,8 @@ class CategoryReader(TextReader):
         categories: List[Category] = []
 
         for category_line in file_lines:
+            if len(category_line.strip()) == 0:
+                continue
             new_category = Category.from_str(category_line)
             if new_category is None:
                 print(f"Category line {category_line} is malformatted. Skipping.")

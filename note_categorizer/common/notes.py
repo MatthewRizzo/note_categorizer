@@ -99,41 +99,24 @@ class Note:
         * `None` - When the data is determined to NOT be using time ranges.
         * `TimeInfo` - When the data has time ranges and they are determined
         """
-        time = NoteTime(None, None, None, True)
-        time_format_str = "%H:%M"
-        time_info_pair = data.split(": ", maxsplit=1)
+        note_time = NoteTime(None, None, None, True)
+        if " " in data:
+            time_info_pair = data.split(" ", maxsplit=1)
+        else:
+            time_info_pair = ["", data]
+
         try:
             start_time_str, end_time_str = time_info_pair[0].split("-")
         except ValueError as err:
             if verbose:
                 print(err)
+                print(f"Unpacking a time_info_pair {time_info_pair} failed")
             return None
 
-        # pylint: disable=unnecessary-lambda-assignment
-        err_msg_func = (
-            lambda time_type, time_str: f"The {time_type} time '{time_str}' is "
-        )
-        err_msg = (
-            "not part of a properly formatted note. It should be HH:MM: <notes here>"
-        )
-        try:
-            time.start_time = datetime.strptime(start_time_str, time_format_str)
-        except ValueError as err:
-            if verbose:
-                print(err)
-                print(err_msg_func("start", start_time_str) + err_msg)
-            time.start_time = None
-            return None
+        note_time.start_time = cls._pick_correct_time_fmt(start_time_str)
+        note_time.end_time = cls._pick_correct_time_fmt(end_time_str)
 
-        try:
-            time.end_time = datetime.strptime(end_time_str, time_format_str)
-        except ValueError as err:
-            if verbose:
-                print(err)
-                print(err_msg_func("end", end_time_str) + err_msg)
-            time.end_time = None
-            return None
-        return TimeInfo(time, time_info_pair[1])
+        return TimeInfo(note_time, time_info_pair[1])
 
     @classmethod
     def _handle_time_difference_in_note(
@@ -147,7 +130,11 @@ class Note:
         """
         # When user just adds time difference
         time = NoteTime(None, None, None, False)
-        # get min from '+<min>:'
+
+        if "+" not in data:
+            return None
+
+        # get minute from '+<min>:'
         str_time_diff = (
             data.split("+", maxsplit=1)[1]
             .split(" ", maxsplit=1)[0]
@@ -194,6 +181,57 @@ class Note:
 
         # Means there is DEFINETLY no time info
         return None
+
+    @classmethod
+    def _parse_time(
+        cls,
+        time_fmt_string: str,
+        raw_time: str,
+        time_type: str,
+        verbose: bool = False,
+    ) -> Optional[datetime]:
+        """Attempts to parse a string with a given time fmt string
+
+        # Args
+            * time_fmt_string (str): The time format string to use
+            * raw_time (str): The raw string (potentially) containing a time value
+            * time (NoteTime): A NoteTime object to manipulate as needed
+            * type (str): Start or end
+            * verbose (bool, optional): Should error handling be verbose
+
+        # Returns
+            * Optional[datetime]:
+                * The time found within the string if it exists
+                * None if there is no time
+        """
+        err_msg = (
+            "not part of a properly formatted note. It should be HH:MM: <notes here>"
+        )
+        try:
+            return datetime.strptime(raw_time, time_fmt_string)
+        except ValueError as err:
+            if verbose:
+                print(err)
+                print(f"The {time_type} time {raw_time}" + err_msg)
+            return None
+
+    @classmethod
+    def _pick_correct_time_fmt(cls, time_str: str) -> Optional[datetime]:
+        """Tries to find the correct time format string to use for the given time string.
+        # Return
+        * The datetime if one is found
+        * None if no format strings worked"""
+        # Allow for other formats
+        format_strings = ["%H:%M", "%H%M"]
+
+        format_start_time = None
+        # Keep going until the correct format string is used
+        for fmt_string in format_strings:
+            format_start_time = cls._parse_time(fmt_string, time_str, "start")
+            if format_start_time is not None:
+                break
+
+        return format_start_time
 
     def __str__(self) -> str:
         res_str = ""
