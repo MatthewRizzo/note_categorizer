@@ -140,18 +140,48 @@ class Parser(abc.ABC):
 
         return parsed_data
 
+    def results_to_str(
+        self, completed_parsing: ParsedData, display_time_sums: bool
+    ) -> str:
+        """Generates a string representing the results in a human-readable
+        manner
+        """
+        res = ""
+        for category in self.valid_categories:
+            res += self._display_results(category, completed_parsing, display_time_sums)
+
+        if not completed_parsing.is_fully_parsed():
+            res += "\nUnknown category notes: "
+            for note in completed_parsing.get_unknown_notes():
+                res += f"\n{note}"
+
+        return res
+
+    def _display_results(
+        self, category: Category, completed_parsing: ParsedData, display_time_sums: bool
+    ) -> str:
+        """Renders the current category into a string and returns it"""
+        category_notes: Optional[List[Note]] = completed_parsing.get_category_notes(
+            category
+        )
+        res = ""
+        res += f"Category {category.name} notes:\n"
+        if category_notes is not None:
+            res += "\n".join(Note.notes_list_to_str_list(category_notes))
+            if display_time_sums is True:
+                start_msg = "\nTotal Time Difference (minutes):"
+                res += f"{start_msg} {self.get_category_time(category)}"
+        else:
+            res += "No notes for this category"
+        res += "\n---------------------------------------------------------\n\n"
+        return res
+
     @abc.abstractmethod
     def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
         """Further parses the data by resolving unknown categorizations"""
 
     def calculate_category_time(self, parsed_data: ParsedData) -> None:
-        """Computers the total time spent (in minutes) on each category.
-        # Precondition
-        parsed_data.is_fully_parsed is True"""
-        if parsed_data.is_fully_parsed() is False:
-            print("Cannot compute total times until data is fully parsed")
-            return
-
+        """Computers the total time spent (in minutes) on each category."""
         for category in self.valid_categories:
             self.compute_category_time(category, parsed_data)
 
@@ -232,3 +262,7 @@ class WebParser(Parser):
     def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
         """Further parses the data by resolving unknown categorizations
         by prompting the user."""
+        # For now do nothing, and have unknowns get displayed
+        # pylint: disable=fixme
+        # TODO: figure out a prompting scheme that makes sense
+        return parsed_data

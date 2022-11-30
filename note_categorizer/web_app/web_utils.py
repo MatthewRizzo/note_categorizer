@@ -15,7 +15,6 @@ class WebUtils(CommonUtils):
 
     root_dir_path = CommonUtils.get_repo_top_dir()
     web_app_dir_path = Path(root_dir_path / constants.PATH_FROM_ROOT_TO_WEB_APP)
-    print(f"web_app_dir_path = {web_app_dir_path}")
     frontend_dir_path = Path(web_app_dir_path / constants.FRONTEND_DIR_NAME)
     static_dir_path = Path(frontend_dir_path / constants.STATIC_DIR_NAME)
     templates_dir_path = Path(frontend_dir_path / constants.TEMPLATE_DIR_NAME)

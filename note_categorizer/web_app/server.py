@@ -1,19 +1,21 @@
 """This is the server aspect of the web app. It is responsible for managing all
 routes and handlers with requests from the client(s)."""
 import logging
+from typing import List
+from typing import Optional
+from typing import Dict
 
 from flask import Flask
 from flask import render_template
-
-# from flask import request
-# from flask import redirect
-# from flask import flash
-# from flask import url_for
-# from flask import jsonify
+from flask import request
+from flask import jsonify
 import werkzeug.serving  # needed to make production worthy app that's secure
 
 from note_categorizer.web_app import constants
 from note_categorizer.web_app.web_utils import WebUtils
+from note_categorizer.categorizer.parser import WebParser, ParsedData
+from note_categorizer.common.category import Category
+from note_categorizer.common.notes import Note
 
 # pylint: disable=too-many-instance-attributes
 class WebAppServer(WebUtils):
@@ -104,3 +106,40 @@ class WebAppServer(WebUtils):
 
     def create_api_routes(self) -> None:
         """Generates internal api routes and adds them to to the app"""
+
+        @self._app.route("/submit_info", methods=["POST"])
+        def process_submit_info():
+            data: Dict[str, List[str]] = request.json
+            notes: List[str] = data.get("notes")
+
+            category_serial: List[str] = data.get("category_info")
+            category_list = list(
+                map(
+                    # pylint: disable=unnecessary-lambda
+                    lambda category_serial_str: Category.from_str(category_serial_str),
+                    category_serial,
+                )
+            )
+
+            if category_list is None:
+                err_msg = "Failed to render category list from serial list"
+                if self._is_verbose:
+                    print(err_msg)
+                return jsonify(err_msg)
+
+            deserialized_note_list: List[Note] = []
+            for note in notes:
+                deserialized_note: Optional[List[Note]] = Note.from_str(note)
+
+                if deserialized_note is None:
+                    err_msg = f"Failed to render note string {note} into a Note"
+                    if self._is_verbose:
+                        print(err_msg)
+                    continue
+
+                deserialized_note_list.append(deserialized_note)
+
+            parser: WebParser = WebParser(category_list, None)
+            parsed_data: ParsedData = parser.parse_notes(deserialized_note_list)
+            parser.calculate_category_time(parsed_data)
+            return jsonify(parser.results_to_str(parsed_data, True))

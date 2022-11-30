@@ -60,13 +60,14 @@ def _read_args() -> Dict[str, Any]:
     return vars(parser.parse_args())
 
 
-def display_results(
+def display_category_results(
     category: Category,
     terminal_note_parser: TerminalParser,
     completed_parsing: ParsedData,
     args: Dict[str, Any],
 ) -> None:
-    """Displays results to terminal"""
+    """Displays results to terminal for a given category.
+    Halfway deprecated."""
     category_notes: Optional[List[Note]] = completed_parsing.get_category_notes(
         category
     )
@@ -79,6 +80,24 @@ def display_results(
     else:
         print("No notes for this category")
     print("---------------------------------------------------------\n\n")
+
+
+def display_results(
+    category_list: List[Category],
+    terminal_note_parser: TerminalParser,
+    completed_parsing: ParsedData,
+    args: Dict[str, Any],
+) -> None:
+    """Display all results to terminal. Halfway deprecated."""
+    for category in category_list:
+        display_category_results(
+            category, terminal_note_parser, completed_parsing, args
+        )
+
+    if not completed_parsing.is_fully_parsed():
+        print("Unknown category notes: ")
+        for note in completed_parsing.get_unknown_notes():
+            print(note)
 
 
 def main() -> None:
@@ -99,13 +118,8 @@ def main() -> None:
     if args["add_times"] is True:
         terminal_note_parser.calculate_category_time(completed_parsing)
 
-    for category in category_list:
-        display_results(category, terminal_note_parser, completed_parsing, args)
-
-    if not completed_parsing.is_fully_parsed():
-        print("Unknown category notes: ")
-        for note in completed_parsing.get_unknown_notes():
-            print(note)
+    res = terminal_note_parser.results_to_str(completed_parsing, True)
+    print(res)
 
 
 if __name__ == "__main__":
