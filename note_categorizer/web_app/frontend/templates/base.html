@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../static/images/calm_timesheet.png">
+    <title>{{ title }}</title>
+
+    <link rel="stylesheet" href="../static/css/bulma.min.css" />  <!-- https://bulma.io/documentation/components/navbar/ -->
+
+
+    <script src="../static/js/extern/jquery-3.6.1.min.js"></script>
+    <script src="../static/js/navbar.js"></script>
+    {% block scripts %}
+    {% endblock %}
+
+</head>
+<body class="has-navbar-fixed-top" style="background-color:#C4FCEF;">
+    <div class="hero is-fullheight">
+        <div class="hero-head">
+            <nav class="navbar is-fixed-top has-background-grey-light" role="navigation" aria-label="main navigation">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="{{ url_for('index') }}">
+                      <img src="../static/images/calm_timesheet.png">
+                    </a>
+
+                    <!-- on mobile or page too small -->
+                    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarSetup">
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                    </a>
+                </div>
+
+                <!-- left side of navbar-->
+                <div id="navbarSetup" class="navbar-menu">
+                    <div class="navbar-start">
+                    </div>
+
+
+                    <!-- right side of navbar-->
+                    <div class="navbar-end">
+                    </div>
+                </div> <!-- close out navbar-->
+            </nav>
+        </div>
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -10,16 +10,26 @@ license = "GNU GPLv3"
 packages = [{include = "note_categorizer"}]
 
 [tool.poetry.scripts]
+# Run the terminal version, WITHOUT adding up times (add --add_times)
+# Defaults to using "category_file.txt" and "note_file.txt" without other flags
 categorizer_cli = "note_categorizer.categorizer.main:main"
+
+# Runs the web app in prod mode
+# Note: this CANNOT get used when in debug mode due to reload + name aliasing
+# Use the makefile instead
+categorizer_web_app = "note_categorizer.web_app.main:start"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-mattrizzo-devops = {git = "https://github.com/MatthewRizzo/mattrizzo_devops"}
+mattrizzo-devops = {git = "https://github.com/MatthewRizzo/mattrizzo_devops", tag="1.2.9"}
 marshmallow = "^3.19.0"
+flask = "^2.2.2"
+requests = "^2.28.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
 pytest-cov = "^4.0.0"
+types-requests = "^2.28.11.5"
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-report html --cov-report term-missing --cov-fail-under 80"

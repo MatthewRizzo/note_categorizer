@@ -81,7 +81,7 @@ def display_results(
     print("---------------------------------------------------------\n\n")
 
 
-def main():
+def main() -> None:
     """Entry to this executable. Should only be used when NOT running Web App"""
 
     args: Dict[str, Any] = _read_args()
