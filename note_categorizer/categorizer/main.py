@@ -68,6 +68,27 @@ def _read_args() -> Dict[str, Any]:
     return vars(parser.parse_args())
 
 
+def display_results(
+    category: Category,
+    terminal_note_parser: TerminalParser,
+    completed_parsing: ParsedData,
+    args: Dict[str, Any],
+) -> None:
+    """Displays results to terminal"""
+    category_notes: Optional[List[Note]] = completed_parsing.get_category_notes(
+        category
+    )
+    print(f"Category {category.name} notes:\n")
+    if category_notes is not None:
+        print("\n".join(Note.notes_list_to_str_list(category_notes)))
+        if args["add_times"] is True:
+            start_msg = "Total Time Difference (minutes):"
+            print(f"{start_msg} {terminal_note_parser.get_category_time(category)}")
+    else:
+        print("No notes for this category")
+    print("---------------------------------------------------------\n\n")
+
+
 def main():
     """Entry to this executable. Should only be used when NOT running Web App"""
 
@@ -83,20 +104,11 @@ def main():
     parsed_notes: ParsedData = terminal_note_parser.parse_notes(note_list)
 
     completed_parsing: ParsedData = terminal_note_parser.resolve_unknowns(parsed_notes)
-    terminal_note_parser.calculate_category_time(completed_parsing)
+    if args["add_times"] is True:
+        terminal_note_parser.calculate_category_time(completed_parsing)
 
     for category in category_list:
-        category_notes: Optional[List[Note]] = completed_parsing.get_category_notes(
-            category
-        )
-        print(f"Category {category.name} notes:\n")
-        if category_notes is not None:
-            print("\n".join(Note.notes_list_to_str_list(category_notes)))
-            start_msg = "Total Time Difference (minutes):"
-            print(f"{start_msg} {terminal_note_parser.get_category_time(category)}")
-        else:
-            print("No notes for this category")
-        print("---------------------------------------------------------\n\n")
+        display_results(category, terminal_note_parser, completed_parsing, args)
 
     if not completed_parsing.is_fully_parsed():
         print("Unknown category notes: ")

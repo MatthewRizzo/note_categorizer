@@ -66,3 +66,5 @@ run through all tests (static and unit testing) for you!
 * Initialize Web App Front end
 * Add front end ability to define categories (name + keywords) in a nice way
 * Add front end ability to past a list of notes -> sent to parser
+* Convert from PM time to 24hr time. i.e. 1:50 -> 13:50
+* Handle "+5:" instead of start and end time
