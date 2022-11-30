@@ -107,6 +107,8 @@ class Note:
 
         try:
             start_time_str, end_time_str = time_info_pair[0].split("-")
+            if end_time_str.endswith(":"):
+                end_time_str = end_time_str[:-1]
         except ValueError as err:
             if verbose:
                 print(err)
