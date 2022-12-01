@@ -30,7 +30,7 @@ class NoteTime:
             and self.end_time is not None
             and self.start_time is not None
         ):
-            diff_seconds: timedelta = self.end_time - self.start_time
+            diff_seconds: timedelta = abs(self.end_time - self.start_time)
             seconds_diff = diff_seconds.total_seconds()
             minutes_diff: int = ceil(seconds_diff // 60)
             self.time_difference_min = minutes_diff
@@ -115,8 +115,8 @@ class Note:
                 print(f"Unpacking a time_info_pair {time_info_pair} failed")
             return None
 
-        note_time.start_time = cls._pick_correct_time_fmt(start_time_str)
-        note_time.end_time = cls._pick_correct_time_fmt(end_time_str)
+        note_time.start_time = cls._pick_correct_time_fmt(start_time_str, "start")
+        note_time.end_time = cls._pick_correct_time_fmt(end_time_str, "stop")
 
         return TimeInfo(note_time, time_info_pair[1])
 
@@ -218,7 +218,9 @@ class Note:
             return None
 
     @classmethod
-    def _pick_correct_time_fmt(cls, time_str: str) -> Optional[datetime]:
+    def _pick_correct_time_fmt(
+        cls, time_str: str, time_type: str
+    ) -> Optional[datetime]:
         """Tries to find the correct time format string to use for the given time string.
         # Return
         * The datetime if one is found
@@ -226,14 +228,14 @@ class Note:
         # Allow for other formats
         format_strings = ["%H:%M", "%H%M"]
 
-        format_start_time = None
+        formatted_time = None
         # Keep going until the correct format string is used
         for fmt_string in format_strings:
-            format_start_time = cls._parse_time(fmt_string, time_str, "start")
-            if format_start_time is not None:
+            formatted_time = cls._parse_time(fmt_string, time_str, time_type)
+            if formatted_time is not None:
                 break
 
-        return format_start_time
+        return formatted_time
 
     def __str__(self) -> str:
         res_str = ""
