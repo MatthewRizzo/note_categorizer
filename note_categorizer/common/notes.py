@@ -82,7 +82,7 @@ class Note:
         elif "-" in data and ":" in data:
             # default case of there being a time range
             time_info = cls._handle_time_range(data)
-        elif ("-" in data or "+" in data) and " " in data:
+        else:
             time_info = cls._handle_improper_colon_format(data)
 
         if time_info is None:
@@ -137,9 +137,9 @@ class Note:
             return None
 
         # get minute from '+<min>:'
+        data_without_plus = data.split("+", maxsplit=1)[1]
         str_time_diff = (
-            data.split("+", maxsplit=1)[1]
-            .split(" ", maxsplit=1)[0]
+            data_without_plus.split(" ", maxsplit=1)[0]
             .split(":", maxsplit=1)[0]
             .strip()
         )
@@ -159,6 +159,10 @@ class Note:
             info: str = data.split(": ", maxsplit=1)[1]
         elif len(info_without_colon) > 0:
             info = info_without_colon.strip()
+        elif len(data_without_plus) > 0 and data.count(" ") == 0:
+            # Handle case when user just has '+<min>' and NOTHING else
+            info = ""
+            time.time_difference_min = time_diff
         else:
             return None
 
@@ -174,6 +178,7 @@ class Note:
         * `TimeInfo` - When the data has time info and it can be determined.
         """
         time_difference_res = cls._handle_time_difference_in_note(data, True)
+        print(time_difference_res)
         if time_difference_res is not None:
             return time_difference_res
 
