@@ -3,7 +3,9 @@ routes and handlers with requests from the client(s)."""
 import logging
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Dict
+from typing import Any
 
 from flask import Flask
 from flask import render_template
@@ -35,6 +37,9 @@ class WebAppServer(WebUtils):
         self._is_threaded = True
         self._use_localhost: bool = use_localhost
         self.public_ip: str = WebUtils.get_public_ip()
+
+        self._parser: WebParser
+        self._parsed_data: ParsedData
 
         # Create any Parent Classes
         WebUtils.__init__(self, self._app, port)
@@ -110,36 +115,93 @@ class WebAppServer(WebUtils):
         @self._app.route("/submit_info", methods=["POST"])
         def process_submit_info():
             data: Dict[str, List[str]] = request.json
-            notes: List[str] = data.get("notes")
+            category_list, deserialized_note_list = self._deserialize_info(data)
 
-            category_serial: List[str] = data.get("category_info")
-            category_list = list(
-                map(
-                    # pylint: disable=unnecessary-lambda
-                    lambda category_serial_str: Category.from_str(category_serial_str),
-                    category_serial,
-                )
+            self._parser: WebParser = WebParser(category_list, None)
+            self._parsed_data: ParsedData = self._parser.parse_notes(
+                deserialized_note_list
             )
+            self._parser.calculate_category_time(self._parsed_data)
 
-            if category_list is None:
-                err_msg = "Failed to render category list from serial list"
-                if self._is_verbose:
-                    print(err_msg)
-                return jsonify(err_msg)
+            return jsonify(generate_response_after_calculation())
 
-            deserialized_note_list: List[Note] = []
-            for note in notes:
-                deserialized_note: Optional[List[Note]] = Note.from_str(note)
+        @self._app.route("/submit_uncategorized_update", methods=["POST"])
+        def process_uncategorized_update():
+            """Request has categories for at least one of the uncategorized notes"""
+            newly_categorized: Dict[str, str] = request.json
 
-                if deserialized_note is None:
-                    err_msg = f"Failed to render note string {note} into a Note"
-                    if self._is_verbose:
-                        print(err_msg)
+            for note_str in newly_categorized:
+                category_str = newly_categorized[note_str]
+                note_to_categorize: Optional[Note] = Note.from_str(note_str.strip())
+                make_note_err_msg = f"Received note string {note_str} from Request."
+                make_note_err_msg += "This is an invalid note string."
+                if note_to_categorize is None:
+                    print(make_note_err_msg)
                     continue
 
-                deserialized_note_list.append(deserialized_note)
+                new_category: Optional[Category] = Category.from_str(category_str)
+                if new_category is None:
+                    categorize_err_msg = (
+                        f"Received category string {category_str} from Request."
+                    )
+                    categorize_err_msg += "This is an invalid note string."
+                    print(categorize_err_msg)
+                    continue
 
-            parser: WebParser = WebParser(category_list, None)
-            parsed_data: ParsedData = parser.parse_notes(deserialized_note_list)
-            parser.calculate_category_time(parsed_data)
-            return jsonify(parser.results_to_str(parsed_data, True))
+                self._parsed_data.add_to_known_assignments(
+                    note_to_categorize, new_category
+                )
+                print(self._parsed_data.get_category_notes(new_category)[-1])
+
+            # Recalculate time now that more info is known
+            self._parser.calculate_category_time(self._parsed_data)
+
+            return jsonify(generate_response_after_calculation())
+
+        def generate_response_after_calculation() -> Dict[str, Any]:
+            """Generates the response after calculation when similar response is required"""
+            are_uncategorized = self._parsed_data.is_fully_parsed() is False
+            uncategorized_note_str_list = list(
+                # pylint: disable=unnecessary-lambda
+                map(lambda note: str(note), self._parsed_data.get_unknown_notes())
+            )
+            new_processed_data = self._parser.results_to_str(self._parsed_data, True)
+            response = {
+                "processed_data": new_processed_data,
+                "are_uncategorized": are_uncategorized,
+                "uncategorized_list": uncategorized_note_str_list,
+                "category_list": self._parser.get_valid_category_list_str(),
+            }
+            return response
+
+    def _deserialize_info(
+        self, data: Dict[str, List[str]]
+    ) -> Tuple[List[Category], List[Note]]:
+        """Uses data from the info post request to deserialize into note list and category list"""
+        notes: List[str] = data.get("notes", [])
+
+        category_serial: List[str] = data.get("category_info", [])
+        category_list = []
+        for category_str in category_serial:
+            if len(category_str.strip()) == 0:
+                continue
+            opt_category: Optional[Category] = Category.from_str(category_str)
+            if opt_category is None:
+                continue
+            category_list.append(opt_category)
+
+        deserialized_note_list: List[Note] = []
+        for note in notes:
+            if len(note.strip()) == 0:
+                continue
+            deserialized_note: Optional[Note] = Note.from_str(note)
+
+            if deserialized_note is None:
+                err_msg = f"Failed to render note string {note} into a Note"
+                if self._is_verbose:
+                    print(err_msg)
+                continue
+
+            deserialized_note_list.append(deserialized_note)
+
+        return (category_list, deserialized_note_list)

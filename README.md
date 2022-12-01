@@ -63,6 +63,4 @@ run through all tests (static and unit testing) for you!
 
 ## Todo
 
-* Initialize Web App Front end
-* Add front end ability to define categories (name + keywords) in a nice way
-* Add front end ability to past a list of notes -> sent to parser
+* Add front end ability to edit a note's category

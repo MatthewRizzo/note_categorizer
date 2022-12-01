@@ -31,9 +31,14 @@ class ParsedData(NamedTuple):
     def add_to_known_assignments(self, note: Note, category: Category) -> None:
         """Adds the note to the correct category.
         Creates the category in the dict if it isn't present already."""
+        print(f"Adding note '{note}' to category '{category}'")
         category_info: List[Note] = self.known_assignments.get(category, [])
         category_info.append(note)
         self.known_assignments[category] = category_info
+
+        # If this note used to be unknown, remove it
+        if note in self.unknown_assignments:
+            self.unknown_assignments.remove(note)
 
     def get_category_notes(self, category: Category) -> Optional[List[Note]]:
         """Retrieves the note(s) associated with this category.
@@ -73,6 +78,13 @@ class Parser(abc.ABC):
 
     # Maps category to time in minutes. Only computed once fully parsed.
     category_total_time: Optional[Dict[Category, int]]
+
+    def get_valid_category_list_str(self) -> List[str]:
+        """Returns a list of strings where each element represents the
+        string form of a category"""
+        # pylint: disable=unnecessary-lambda-assignment disable=unnecessary-lambda
+        convert_category_to_str = lambda category: str(category)
+        return list(map(convert_category_to_str, self.valid_categories))
 
     def add_category(self, new_category: Category) -> None:
         """Adds a category to the list"""

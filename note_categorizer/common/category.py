@@ -5,6 +5,7 @@ from typing import List
 from typing import TypeVar
 from typing import Type
 from typing import Optional
+from typing import Any
 from marshmallow import Schema, fields
 from marshmallow.decorators import post_load
 from marshmallow import ValidationError
@@ -27,6 +28,19 @@ class Category:
         self._keywords: List[str] = list(
             map(lambda keyword: keyword.lower(), unformatted_keywords)
         )
+
+    def __eq__(self, obj: Any) -> bool:
+        """Define how 2 categories are equal"""
+        if not isinstance(obj, Category):
+            return False
+
+        other_category = Category.copy(obj)
+        return self.name.lower() == other_category.name.lower()
+
+    def __hash__(self) -> int:
+        """Redefine hash function so class is hashable.
+        Only required because __eq__ was overriden"""
+        return hash(self.name.lower())
 
     def generate_keywords_from_name(self, default_keywords: List[str]) -> List[str]:
         """Adds to the list of keywords by generating them from category name.
@@ -90,9 +104,7 @@ class Category:
     def from_str(
         cls: Type[StaticCategory], serial_data: str
     ) -> Optional[StaticCategory]:
-        """Instantiates a category object from a string representing it.
-        Note: there MUST be a ': ' seperating name from keywords.
-        Even if there aren't any."""
+        """Instantiates a category object from a string representing it."""
         serial_data = serial_data.strip()
 
         # User forgot to put :
@@ -110,6 +122,13 @@ class Category:
         else:
             keywords = []
         return Category(name_keyword_pair[0], keywords)  # type: ignore
+
+    @classmethod
+    def copy(cls, obj_to_copy: StaticCategory) -> StaticCategory:
+        """Shallow one object of the class into another"""
+        # XXX(mrizzo) This IS an object of this class. but mypy + pylint get confused
+        # pylint: disable=protected-access
+        return Category(obj_to_copy.name, obj_to_copy._keywords)  # type: ignore
 
 
 class CategorySchema(Schema):

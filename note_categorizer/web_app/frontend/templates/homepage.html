@@ -10,32 +10,43 @@
 </head>
 <body>
     {% block content %}
-    On homepage
-    <div class="field">
-        <label class="label">Category List</label>
-        <div class="control">
-            <textarea
-                id="category-data" class="textarea" placeholder="On Each line:
-                    <category> <space separated keywords> or
-                    <category>: <space separated keywords> "></textarea>
-        </div>
-    </div>
-    <div class="field">
-        <label class="label">Notes List</label>
-        <div class="control">
-            <textarea id="notes" class="textarea" placeholder="On Each line:
-            H:M-H:M: <note> or
-            H:M-H:M <note> or
-            HM-HM: <note> or
-            HM-HM <note> or "></textarea>
-        </div>
-    </div>
+    <div class="columns">
+        <div class ="column" id="inital-input-section">
+            <div class="field row">
+                <label class="label">Category List</label>
+                <div class="control">
+                    <textarea
+                        id="category-data" class="textarea" placeholder="On Each line:
+                            <category> <space separated keywords> or
+                            <category>: <space separated keywords> "></textarea>
+                </div>
+            </div>
+            <div class="field row is-full">
+                <label class="label">Notes List</label>
+                <div class="control ">
+                    <textarea id="notes" class="textarea" placeholder="On Each line:
+                    H:M-H:M: <note> or
+                    H:M-H:M <note> or
+                    HM-HM: <note> or
+                    HM-HM <note> or "></textarea>
+                </div>
+            </div>
 
-    <div class="field is-grouped columns is-centered">
-        <div class="control">
-          <button id="submit-info" class="button is-link">Submit</button>
+            <div class="field is-grouped columns is-centered">
+                <div class="control">
+                <button id="submit-info" class="button is-link">Submit</button>
+                </div>
+            </div>
+        </div> <!-- End of initial input section -->
+
+
+        <div id="uncategorized-wrapper" class="column rows is-hidden ">
+            <p class="has-text-weight-bold row">Uncategorized Note List</p>
+            <!-- Anchor / placeholder for if there are uncategorized -->
+            <div id="uncategorized-row-container" class="rows"></div>
+            <button id="submit-uncategorized-update" class="button is-link is-centered">Update Note Categorization</button>
         </div>
-    </div>
+    </div> <!-- End of Columnbs -->
 
     <label class="label">Processed Results</label>
     <div class="control">

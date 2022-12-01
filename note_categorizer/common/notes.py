@@ -4,12 +4,15 @@ from typing import TypeVar
 from typing import Type
 from typing import List
 from typing import Optional
+from typing import Any
 from typing import NamedTuple
 from math import ceil
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from marshmallow import ValidationError
+
+NoteTimeStatic = TypeVar("NoteTimeStatic", bound="NoteTime")
 
 
 @dataclass
@@ -39,6 +42,39 @@ class NoteTime:
             return self.time_difference_min
         return 0
 
+    def __eq__(self, other_note_time: Any) -> bool:
+        """Return true if both are equal"""
+        is_right_type = isinstance(other_note_time, NoteTime)
+        if is_right_type is False:
+            return False
+
+        other_note_time = NoteTime.copy(other_note_time)
+
+        same_start = self.start_time == other_note_time.start_time
+        same_end = self.end_time == other_note_time.end_time
+        same_has_time_range = self.has_time_range == other_note_time.has_time_range
+        return same_start and same_end and same_has_time_range
+
+    @classmethod
+    def get_time_str(cls, time: datetime) -> str:
+        """Converts a datetime value to HH:MM notation as a string"""
+        # HH:MM:SS
+        raw_time_str = str(time.time()).strip()
+
+        # Remove the seconds
+        time_list_no_sec = raw_time_str.split(":")[:-1]
+        return ":".join(time_list_no_sec)
+
+    @classmethod
+    def copy(cls, obj_to_copy: NoteTimeStatic) -> NoteTimeStatic:
+        """Shallow one object of the class into another"""
+        return NoteTime(  # type: ignore
+            obj_to_copy.start_time,
+            obj_to_copy.end_time,
+            obj_to_copy.time_difference_min,
+            obj_to_copy.has_time_range,
+        )
+
 
 class TimeInfo(NamedTuple):
     """Class representing time and info of a note"""
@@ -63,6 +99,8 @@ class Note:
         """Instantiates a note object from a string with all needed information
         using JUST a string (i.e. a line from a file)
         """
+        if len(raw_file_data.strip()) == 0:
+            return None
         try:
             time_info: TimeInfo = cls._check_for_time(raw_file_data.strip())
             return Note(time_info.time, time_info.info)  # type: ignore
@@ -115,8 +153,10 @@ class Note:
                 print(f"Unpacking a time_info_pair {time_info_pair} failed")
             return None
 
-        note_time.start_time = cls._pick_correct_time_fmt(start_time_str, "start")
-        note_time.end_time = cls._pick_correct_time_fmt(end_time_str, "stop")
+        note_time.start_time = cls._pick_correct_time_fmt(
+            start_time_str.strip(), "start"
+        )
+        note_time.end_time = cls._pick_correct_time_fmt(end_time_str.strip(), "stop")
 
         return TimeInfo(note_time, time_info_pair[1])
 
@@ -156,7 +196,13 @@ class Note:
         time.time_difference_min = time_diff
         info_without_colon = data.split(str(str_time_diff), maxsplit=1)[1]
         if ":" in data:
-            info: str = data.split(": ", maxsplit=1)[1]
+            potential_info = data.split(":", maxsplit=1)[1]
+            # "+<min>: <info>"
+            if len(potential_info.strip()) > 0:
+                info: str = potential_info
+            # "+<min>:"
+            else:
+                info = ""
         elif len(info_without_colon) > 0:
             info = info_without_colon.strip()
         elif len(data_without_plus) > 0 and data.count(" ") == 0:
@@ -178,7 +224,6 @@ class Note:
         * `TimeInfo` - When the data has time info and it can be determined.
         """
         time_difference_res = cls._handle_time_difference_in_note(data, True)
-        print(time_difference_res)
         if time_difference_res is not None:
             return time_difference_res
 
@@ -248,19 +293,23 @@ class Note:
             if self.time.start_time is None:
                 res_str += "HH:MM"
             else:
-                res_str += str(self.time.start_time.time()).strip()
+                res_str += NoteTime.get_time_str(self.time.start_time)
 
             res_str += "-"
 
             if self.time.end_time is None:
                 res_str += "HH:MM"
             else:
-                res_str += str(self.time.end_time.time()).strip()
+                res_str += NoteTime.get_time_str(self.time.end_time)
         else:
             res_str = f"+{self.time.time_difference_min}"
 
         res_str += f": {self.info}"
         return res_str
+
+    def __eq__(self, other_note: Any) -> bool:
+        """Returns true if the 2 notes are equal"""
+        return str(self) == str(other_note) and isinstance(other_note, Note)
 
     @classmethod
     def notes_list_to_str_list(cls, note_list: List[NoteStatic]) -> List[str]:
