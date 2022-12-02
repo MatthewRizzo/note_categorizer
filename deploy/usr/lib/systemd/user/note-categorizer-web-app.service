@@ -1,0 +1,19 @@
+[Unit]
+Description=Run the Note Categorizer in Web Application / Server mode
+# These units are only available to system units. But this is a user unit.
+# After=network-online.target
+# Requires=network-online.target
+
+
+
+[Service]
+# https://fedoraproject.org/wiki/Packaging:Systemd
+EnvironmentFile=/usr/lib/systemd/sysconfig/note-categorizer-web-app-env
+# Add -u to flush prints to systemd
+ExecStart=/bin/bash -c '${venv_path}/bin/python -u ${WEB_APP_MAIN_PATH} --project_root_path ${note_categorizer_root_dir} --verbose'
+RestartSec=1min
+
+[Install]
+# Have the service run by default
+# https://unix.stackexchange.com/a/451617
+WantedBy=default.target

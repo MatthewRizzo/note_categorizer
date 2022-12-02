@@ -6,6 +6,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Dict
 from typing import Any
+from pathlib import Path
 
 from flask import Flask
 from flask import render_template
@@ -25,8 +26,14 @@ class WebAppServer(WebUtils):
     the correct backend logic
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
-        self, port: int, is_debug: bool, is_verbose: bool, use_localhost: bool
+        self,
+        port: int,
+        is_debug: bool,
+        is_verbose: bool,
+        use_localhost: bool,
+        project_root_path: Path,
     ):
         """Construct the WebAppServer"""
 
@@ -42,7 +49,7 @@ class WebAppServer(WebUtils):
         self._parsed_data: ParsedData
 
         # Create any Parent Classes
-        WebUtils.__init__(self, self._app, port)
+        WebUtils.__init__(self, self._app, port, project_root_path)
 
         # refreshes flask if html files change
         if self._is_debug:
@@ -113,20 +120,18 @@ class WebAppServer(WebUtils):
         """Generates internal api routes and adds them to to the app"""
 
         @self._app.route("/submit_info", methods=["POST"])
-        def process_submit_info():
+        def process_submit_info() -> dict:
             data: Dict[str, List[str]] = request.json
             category_list, deserialized_note_list = self._deserialize_info(data)
 
-            self._parser: WebParser = WebParser(category_list, None)
-            self._parsed_data: ParsedData = self._parser.parse_notes(
-                deserialized_note_list
-            )
+            self._parser = WebParser(category_list, None)
+            self._parsed_data = self._parser.parse_notes(deserialized_note_list)
             self._parser.calculate_category_time(self._parsed_data)
 
             return jsonify(generate_response_after_calculation())
 
         @self._app.route("/submit_uncategorized_update", methods=["POST"])
-        def process_uncategorized_update():
+        def process_uncategorized_update() -> dict:
             """Request has categories for at least one of the uncategorized notes"""
             newly_categorized: Dict[str, str] = request.json
 

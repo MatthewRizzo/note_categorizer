@@ -6,6 +6,37 @@ lawyers when making timesheets).
 
 ## Running the Program
 
+### Running Via Web App
+
+Also see `run_web` and `debug_web` in the [Makefile](Makefile).
+
+```bash
+# Run in Production
+poetry run categorizer_web_app
+
+# Running in debug mode
+# Due to naming conflicts with poetry, a script alias cannot be used
+poetry run python note_categorizer/web_app/main.py --debugModeOn --localhost --verbose
+```
+
+#### Deploy Web App as a Systemd Service
+
+Run the following command. Note it must be done with sudo as saving service
+files to `/usr/lib/systemd/user` requires sudo access.
+
+```bash
+sudo ./deploy/deploy_service.sh
+```
+
+The service will then be accessible via the following commands:
+
+```bash
+systemctl status --user note-categorizer-web-app.service
+systemctl stop --user note-categorizer-web-app.service
+systemctl start --user note-categorizer-web-app.service
+systemctl restart --user note-categorizer-web-app.service
+```
+
 ### Running Via Command Line
 
 This program is easy to run via command line using poetry! Just run

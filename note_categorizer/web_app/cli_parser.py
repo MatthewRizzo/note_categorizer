@@ -4,6 +4,7 @@ import argparse
 import os
 from typing import Dict
 from typing import Any
+from pathlib import Path
 
 # ------------------------------Project Imports-----------------------------#
 from note_categorizer.web_app import constants
@@ -76,4 +77,14 @@ class CLIParser:
             default=False,
             dest="use_localhost",
             help=localhost_help,
+        )
+
+        project_root_help = "Set this flag to have all displayed url's"
+        project_root_help += "be localhost instead of an actual IP"
+        self.parser.add_argument(
+            "-r",
+            "--project_root_path",
+            default=None,
+            type=Path,
+            help=project_root_help,
         )

@@ -40,3 +40,7 @@ source = ["note_categorizer"]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# Makes sure poetry creates virtual environment in the project
+[virtualenvs]
+in-project = true

@@ -13,15 +13,17 @@ from note_categorizer.common.common_utils import CommonUtils
 class WebUtils(CommonUtils):
     """Uility class to handle common things such as pathing"""
 
-    root_dir_path = CommonUtils.get_repo_top_dir()
-    web_app_dir_path = Path(root_dir_path / constants.PATH_FROM_ROOT_TO_WEB_APP)
-    frontend_dir_path = Path(web_app_dir_path / constants.FRONTEND_DIR_NAME)
-    static_dir_path = Path(frontend_dir_path / constants.STATIC_DIR_NAME)
-    templates_dir_path = Path(frontend_dir_path / constants.TEMPLATE_DIR_NAME)
+    project_root_path: Path
+    web_app_dir_path: Path
+    frontend_dir_path: Path
+    static_dir_path: Path
+    templates_dir_path: Path
     app: Flask
     port: int
 
-    def __init__(self, app: Flask = None, port: int = None) -> None:
+    def __init__(
+        self, app: Flask = None, port: int = None, project_root_path: Path = None
+    ) -> None:
         """Class used to implement any helper functions needed for flask that
         don't directly achieve functionality
         """
@@ -30,6 +32,8 @@ class WebUtils(CommonUtils):
         # onyl set the vars if they are not already set
         self.cls.app = app if app is not None else self.cls.app
         self.cls.port = port if port is not None else self.cls.port
+        self.cls.project_root_path = project_root_path
+        self.cls.generate_path()
 
     @classmethod
     def get_static_dir_path(cls) -> Path:
@@ -82,3 +86,23 @@ class WebUtils(CommonUtils):
         base_ip = cls.get_public_ip()
         full_base = base_ip + ":" + str(port)
         return full_base
+
+    @classmethod
+    def get_repo_top_dir(cls) -> Path:
+        # Try using the class variable instead first
+        if cls.project_root_path is not None:
+            return cls.project_root_path
+        return super().get_repo_top_dir()
+
+    @classmethod
+    def generate_path(cls) -> None:
+        """Generates the path to all needed dirs using just the root dir"""
+        cls.project_root_path = cls.get_repo_top_dir()
+        cls.web_app_dir_path = Path(
+            cls.project_root_path / constants.PATH_FROM_ROOT_TO_WEB_APP
+        )
+        cls.frontend_dir_path = Path(cls.web_app_dir_path / constants.FRONTEND_DIR_NAME)
+        cls.static_dir_path = Path(cls.frontend_dir_path / constants.STATIC_DIR_NAME)
+        cls.templates_dir_path = Path(
+            cls.frontend_dir_path / constants.TEMPLATE_DIR_NAME
+        )
