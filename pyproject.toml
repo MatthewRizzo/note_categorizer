@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "Note Categorizer"
-version = "0.1.0"
+version = "2.0.1"
 description = "Note categorizer Web-App Project"
 authors = ["Matthew Rizzo <mattrizzo21@gmail.com>"]
 license = "GNU GPLv3"
