@@ -115,6 +115,8 @@ function reload_service_files() {
     echo "Reloading the service"
     sudo systemctl --machine=${ORIGINAL_USER}@.host --user daemon-reload
 
+    sudo systemctl --machine=${ORIGINAL_USER}@.host --user enable ${SERVICE_NAME}
+
     # Reference on user systemd files
     # https://wiki.archlinux.org/title/systemd/User#How_it_works
     sudo systemctl --machine=${ORIGINAL_USER}@.host --user stop ${SERVICE_NAME}
