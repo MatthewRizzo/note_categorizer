@@ -111,7 +111,7 @@ def main() -> None:
     note_reader = NoteReader(args["notes_path"])
     note_list: List[Note] = note_reader.generate_list()
 
-    terminal_note_parser = TerminalParser(category_list, {})
+    terminal_note_parser = TerminalParser(category_list, {}, False)
     parsed_notes: ParsedData = terminal_note_parser.parse_notes(note_list)
 
     completed_parsing: ParsedData = terminal_note_parser.resolve_unknowns(parsed_notes)

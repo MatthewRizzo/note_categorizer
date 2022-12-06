@@ -6,12 +6,13 @@ from typing import Optional
 from typing import Tuple
 from typing import Dict
 from typing import Any
+from typing import NamedTuple
 from pathlib import Path
+
 
 from flask import Flask
 from flask import render_template
 from flask import request
-from flask import jsonify
 import werkzeug.serving  # needed to make production worthy app that's secure
 
 from note_categorizer.web_app import constants
@@ -19,6 +20,17 @@ from note_categorizer.web_app.web_utils import WebUtils
 from note_categorizer.categorizer.parser import WebParser, ParsedData
 from note_categorizer.common.category import Category
 from note_categorizer.common.notes import Note
+
+
+class RequestResponseJson(NamedTuple):
+    """Class representing the generic structure of a response to a request."""
+
+    # Set to empty string to have it be ignore by frontend
+    processed_data: str
+    are_uncategorized: bool
+    uncategorized_list: List[str]
+    category_list: List[str]
+
 
 # pylint: disable=too-many-instance-attributes
 class WebAppServer(WebUtils):
@@ -121,18 +133,24 @@ class WebAppServer(WebUtils):
 
         @self._app.route("/submit_info", methods=["POST"])
         def process_submit_info() -> dict:
+            if not isinstance(request.json, dict):
+                return RequestResponseJson("", False, [], [])._asdict()
+
             data: Dict[str, List[str]] = request.json
             category_list, deserialized_note_list = self._deserialize_info(data)
 
-            self._parser = WebParser(category_list, None)
+            self._parser = WebParser(category_list, None, self._is_verbose)
             self._parsed_data = self._parser.parse_notes(deserialized_note_list)
             self._parser.calculate_category_time(self._parsed_data)
 
-            return jsonify(generate_response_after_calculation())
+            return generate_response_after_calculation()
 
         @self._app.route("/submit_uncategorized_update", methods=["POST"])
         def process_uncategorized_update() -> dict:
             """Request has categories for at least one of the uncategorized notes"""
+            if not isinstance(request.json, dict):
+                return RequestResponseJson("", False, [], [])._asdict()
+
             newly_categorized: Dict[str, str] = request.json
 
             for note_str in newly_categorized:
@@ -156,12 +174,15 @@ class WebAppServer(WebUtils):
                 self._parsed_data.add_to_known_assignments(
                     note_to_categorize, new_category
                 )
-                print(self._parsed_data.get_category_notes(new_category)[-1])
+                if self._is_verbose:
+                    category_notes = self._parsed_data.get_category_notes(new_category)
+                    if category_notes is not None:
+                        print(category_notes[-1])
 
             # Recalculate time now that more info is known
             self._parser.calculate_category_time(self._parsed_data)
 
-            return jsonify(generate_response_after_calculation())
+            return generate_response_after_calculation()
 
         def generate_response_after_calculation() -> Dict[str, Any]:
             """Generates the response after calculation when similar response is required"""
@@ -171,13 +192,14 @@ class WebAppServer(WebUtils):
                 map(lambda note: str(note), self._parsed_data.get_unknown_notes())
             )
             new_processed_data = self._parser.results_to_str(self._parsed_data, True)
-            response = {
-                "processed_data": new_processed_data,
-                "are_uncategorized": are_uncategorized,
-                "uncategorized_list": uncategorized_note_str_list,
-                "category_list": self._parser.get_valid_category_list_str(),
-            }
-            return response
+
+            response = RequestResponseJson(
+                new_processed_data,
+                are_uncategorized,
+                uncategorized_note_str_list,
+                self._parser.get_valid_category_list_str(),
+            )
+            return response._asdict()
 
     def _deserialize_info(
         self, data: Dict[str, List[str]]

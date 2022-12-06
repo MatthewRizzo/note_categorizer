@@ -1,6 +1,7 @@
 """Module containing utility functions for the web app"""
 # ------------------------------STANDARD DEPENDENCIES-----------------------------#
 from pathlib import Path
+from typing import Optional
 from flask import Flask
 import requests
 from requests.exceptions import ReadTimeout
@@ -13,7 +14,7 @@ from note_categorizer.common.common_utils import CommonUtils
 class WebUtils(CommonUtils):
     """Uility class to handle common things such as pathing"""
 
-    project_root_path: Path
+    project_root_path: Optional[Path]
     web_app_dir_path: Path
     frontend_dir_path: Path
     static_dir_path: Path

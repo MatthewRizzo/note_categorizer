@@ -21,6 +21,8 @@ class ParsedData(NamedTuple):
     # Notes that still need to be added to a category
     unknown_assignments: List[Note]
 
+    is_verbose: bool
+
     def is_fully_parsed(self) -> bool:
         """# Return
         * True when there are no more unknown assignments for notes.
@@ -31,7 +33,8 @@ class ParsedData(NamedTuple):
     def add_to_known_assignments(self, note: Note, category: Category) -> None:
         """Adds the note to the correct category.
         Creates the category in the dict if it isn't present already."""
-        print(f"Adding note '{note}' to category '{category}'")
+        if self.is_verbose:
+            print(f"Adding note '{note}' to category '{category}'")
         category_info: List[Note] = self.known_assignments.get(category, [])
         category_info.append(note)
         self.known_assignments[category] = category_info
@@ -79,6 +82,8 @@ class Parser(abc.ABC):
     # Maps category to time in minutes. Only computed once fully parsed.
     category_total_time: Optional[Dict[Category, int]]
 
+    is_verbose: bool = False
+
     def get_valid_category_list_str(self) -> List[str]:
         """Returns a list of strings where each element represents the
         string form of a category"""
@@ -118,20 +123,19 @@ class Parser(abc.ABC):
         self, category: Category, fully_parsed_data: ParsedData
     ) -> None:
         """Computes the total time for the given category and saves it."""
-        total_time_min = 0
+        if self.category_total_time is None:
+            self.category_total_time = {}
+
         category_notes_list = fully_parsed_data.get_category_notes(category)
         if category_notes_list is None:
             return
 
+        new_total_time = 0
         for note in category_notes_list:
+            current_note_diff = note.time.compute_time_difference()
+            new_total_time += current_note_diff
 
-            total_time_min = note.time.compute_time_difference()
-            if self.category_total_time is None:
-                self.category_total_time = {}
-
-            category_total_time = int(self.category_total_time.get(category, 0))
-            category_total_time += total_time_min
-            self.category_total_time[category] = category_total_time
+        self.category_total_time[category] = new_total_time
 
     def get_category_time(self, category: Category) -> int:
         """Returns the overall time difference in MINUTES for notes in the category"""
@@ -144,7 +148,7 @@ class Parser(abc.ABC):
         # Return
         The parsed data.
         """
-        parsed_data: ParsedData = ParsedData({}, [])
+        parsed_data: ParsedData = ParsedData({}, [], self.is_verbose)
         for note in notes:
             category_found: bool = self._add_note_to_category(note, parsed_data)
             if category_found is False:
@@ -195,6 +199,8 @@ class Parser(abc.ABC):
     def calculate_category_time(self, parsed_data: ParsedData) -> None:
         """Computers the total time spent (in minutes) on each category."""
         for category in self.valid_categories:
+            if category is None:
+                continue
             self.compute_category_time(category, parsed_data)
 
     def _add_note_to_category(self, note: Note, parsed_data: ParsedData) -> bool:
@@ -209,11 +215,18 @@ class Parser(abc.ABC):
         return False
 
 
-@dataclass
 class TerminalParser(Parser):
     """Class representing how to parse data when working through terminal"""
 
-    valid_categories: List[Category]
+    def __init__(
+        self,
+        valid_categories: List[Category],
+        category_total_time: Optional[Dict[Category, int]],
+        is_verbose: bool = False,
+    ):
+        self.valid_categories = valid_categories
+        self.is_verbose = is_verbose
+        super().__init__(valid_categories, category_total_time, is_verbose)
 
     def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
         """Further parses the data by resolving unknown categorizations
@@ -265,16 +278,21 @@ class TerminalParser(Parser):
         return selected_category
 
 
-@dataclass
 class WebParser(Parser):
     """Class representing how to parse data when working through Web App"""
 
-    valid_categories: List[Category]
+    def __init__(
+        self,
+        valid_categories: List[Category],
+        category_total_time: Dict[Category, int] | None,
+        is_verbose: bool = False,
+    ):
+        self.valid_categories = valid_categories
+        self.is_verbose = is_verbose
+        super().__init__(valid_categories, category_total_time, is_verbose)
 
     def resolve_unknowns(self, parsed_data: ParsedData) -> ParsedData:
         """Further parses the data by resolving unknown categorizations
         by prompting the user."""
         # For now do nothing, and have unknowns get displayed
-        # pylint: disable=fixme
-        # TODO: figure out a prompting scheme that makes sense
         return parsed_data

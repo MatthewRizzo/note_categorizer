@@ -170,6 +170,10 @@ function hide_remove_uncategorized_input() {
  */
 function handle_response_after_processing(processed_res) {
     const output_res = processed_res["processed_data"]
+    if (output_res == "") {
+        return
+    }
+
     const are_uncategorized = processed_res["are_uncategorized"]
     if (are_uncategorized == true) {
         display_uncategorized_input(processed_res["uncategorized_list"],
